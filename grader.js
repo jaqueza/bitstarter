@@ -49,7 +49,7 @@ var checkHtmlFile = function(htmlfile, checksfile) {
     var checks = loadChecks(checksfile).sort();
     var out = {};
     for(var ii in checks) {
-	var present = $(checks[ii].length) > 0;
+	var present = $(checks[ii]).length > 0;
 	out[checks[ii]] = present;
     }
     return out;
@@ -58,7 +58,7 @@ var checkHtmlFile = function(htmlfile, checksfile) {
 var clone = function(fn) {
     // Workaround for commander.js issue.
     // http://stackoverflow.com/a/6772648
-    return fn.bind();
+    return fn.bind({});
 };
 
 if(require.main == module){
