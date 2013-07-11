@@ -20,7 +20,7 @@ References:
   - https://developer.mozilla.org/en-US/docs/JSON
   - https://developer.mozilla.org/en-US/docs/JSON#JSON_in_Firefox_2
 */
-
+var rest = require('restler');
 var fs = require('fs');
 var program = require('commander');
 var cheerio = require('cheerio');
@@ -45,6 +45,29 @@ var loadChecks = function(checksfile) {
   return JSON.parse(fs.readFileSync(checksfile));  
 };
 
+function checkURL(htmlfile, checksfile) {
+
+   rest.get(htmlfile).on('complete', function(result) {
+
+      if (result instanceof Error) {
+        console.log('Error: ' + result.message);
+        this.retry(5000); // try again after 5 sec
+      } else {
+
+      $ = cheerio.load(result);
+      var checks = loadChecks(checksfile).sort();
+      var out = {};
+      for(var ii in checks) {
+      var present = $(checks[ii]).length > 0;
+      out[checks[ii]] = present;
+    }
+    //~ var outJson = JSON.stringify(checkJson, null, 4);
+    console.log(out);
+
+      }
+  });
+}
+
 var checkHtmlFile = function(htmlfile, checksfile) {
     $ = cheerioHtmlFile(htmlfile);
     var checks = loadChecks(checksfile).sort();
@@ -68,9 +91,13 @@ if(require.main == module){
 	.option('-f, --file <html_file>', 'Path to index.html', clone(assertFileExists), HTMLFILE_DEFAULT)
 	.option('-u, --url <url_address> ', 'URL Address', URL_DEFAULT)
 	.parse(process.argv);
+    if((process.argv[4] == '-u') || (process.argv[4] == '--url')) {
+	checkURL(program.url, program.checks);
+    } else {
     var checkJson = checkHtmlFile(program.file, program.checks);
     var outJson = JSON.stringify(checkJson, null, 4);
     console.log(outJson);
+    }
 } else {
     exports.checkHtmlFile = checkHtmlFile;
 }
